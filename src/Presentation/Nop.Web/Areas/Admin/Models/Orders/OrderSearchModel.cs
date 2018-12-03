@@ -103,6 +103,8 @@ namespace Nop.Web.Areas.Admin.Models.Orders
 
         public IList<SelectListItem> AvailableCountries { get; set; }
 
+        public bool IgnoreLimitPerStore { get; set; }
+
         #endregion
     }
 }

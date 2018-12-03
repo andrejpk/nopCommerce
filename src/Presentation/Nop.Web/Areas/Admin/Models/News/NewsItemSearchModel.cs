@@ -26,6 +26,8 @@ namespace Nop.Web.Areas.Admin.Models.News
 
         public IList<SelectListItem> AvailableStores { get; set; }
 
+        public bool IgnoreLimitPerStore { get; set; }
+
         #endregion
     }
 }

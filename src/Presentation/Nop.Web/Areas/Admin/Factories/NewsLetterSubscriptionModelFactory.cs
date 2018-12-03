@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Nop.Core.Domain.Catalog;
 using Nop.Services.Helpers;
 using Nop.Services.Localization;
 using Nop.Services.Messages;
@@ -17,6 +18,7 @@ namespace Nop.Web.Areas.Admin.Factories
     {
         #region Fields
 
+        private readonly CatalogSettings _catalogSettings;
         private readonly IBaseAdminModelFactory _baseAdminModelFactory;
         private readonly IDateTimeHelper _dateTimeHelper;
         private readonly ILocalizationService _localizationService;
@@ -27,12 +29,14 @@ namespace Nop.Web.Areas.Admin.Factories
 
         #region Ctor
 
-        public NewsletterSubscriptionModelFactory(IBaseAdminModelFactory baseAdminModelFactory,
+        public NewsletterSubscriptionModelFactory(CatalogSettings catalogSettings,
+            IBaseAdminModelFactory baseAdminModelFactory,
             IDateTimeHelper dateTimeHelper,
             ILocalizationService localizationService,
             INewsLetterSubscriptionService newsLetterSubscriptionService,
             IStoreService storeService)
         {
+            this._catalogSettings = catalogSettings;
             this._baseAdminModelFactory = baseAdminModelFactory;
             this._dateTimeHelper = dateTimeHelper;
             this._localizationService = localizationService;
@@ -76,6 +80,8 @@ namespace Nop.Web.Areas.Admin.Factories
                 Value = "2",
                 Text = _localizationService.GetResource("Admin.Promotions.NewsLetterSubscriptions.List.SearchActive.NotActiveOnly")
             });
+
+            searchModel.IgnoreLimitPerStore = _catalogSettings.IgnoreStoreLimitations;
 
             //prepare page parameters
             searchModel.SetGridPageSize();

@@ -26,6 +26,8 @@ namespace Nop.Web.Areas.Admin.Models.Polls
 
         public IList<SelectListItem> AvailableStores { get; set; }
 
+        public bool IgnoreLimitPerStore { get; set; }
+
         #endregion
     }
 }

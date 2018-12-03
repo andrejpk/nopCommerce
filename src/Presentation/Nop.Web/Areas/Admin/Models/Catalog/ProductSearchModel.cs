@@ -59,6 +59,8 @@ namespace Nop.Web.Areas.Admin.Models.Catalog
 
         public bool IsLoggedInAsVendor { get; set; }
 
+        public bool IgnoreLimitPerStore { get; set; }
+
         public bool AllowVendorsToImportProducts { get; set; }
 
         public IList<SelectListItem> AvailableCategories { get; set; }

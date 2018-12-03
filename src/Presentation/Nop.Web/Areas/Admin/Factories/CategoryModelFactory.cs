@@ -104,6 +104,8 @@ namespace Nop.Web.Areas.Admin.Factories
             //prepare available stores
             _baseAdminModelFactory.PrepareStores(searchModel.AvailableStores);
 
+            searchModel.IgnoreLimitPerStore = _catalogSettings.IgnoreStoreLimitations;
+
             //prepare page parameters
             searchModel.SetGridPageSize();
 
