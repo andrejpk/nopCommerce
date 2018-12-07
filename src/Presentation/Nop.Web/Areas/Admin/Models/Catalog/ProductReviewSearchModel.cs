@@ -51,7 +51,7 @@ namespace Nop.Web.Areas.Admin.Models.Catalog
 
         public IList<SelectListItem> AvailableApprovedOptions { get; set; }
 
-        public bool IgnoreLimitPerStore { get; set; }
+        public bool HideStoresList { get; set; }
 
         #endregion
     }

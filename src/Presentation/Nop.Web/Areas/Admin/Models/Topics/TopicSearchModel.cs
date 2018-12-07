@@ -29,7 +29,7 @@ namespace Nop.Web.Areas.Admin.Models.Topics
         [NopResourceDisplayName("Admin.ContentManagement.Topics.List.SearchKeywords")]
         public string SearchKeywords { get; set; }
 
-        public bool IgnoreLimitPerStore { get; set; }
+        public bool HideStoresList { get; set; }
 
         #endregion
     }

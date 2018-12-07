@@ -643,7 +643,7 @@ namespace Nop.Web.Areas.Admin.Factories
             //prepare available warehouses
             _baseAdminModelFactory.PrepareWarehouses(searchModel.AvailableWarehouses);
 
-            searchModel.IgnoreLimitPerStore = _catalogSettings.IgnoreStoreLimitations;
+            searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
             //prepare "published" filter (0 - all; 1 - published only; 2 - unpublished only)
             searchModel.AvailablePublishedOptions.Add(new SelectListItem

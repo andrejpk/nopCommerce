@@ -86,7 +86,7 @@ namespace Nop.Web.Areas.Admin.Factories
                 Value = "2"
             });
 
-            searchModel.IgnoreLimitPerStore = _catalogSettings.IgnoreStoreLimitations;
+            searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
             //prepare page parameters
             searchModel.SetGridPageSize();

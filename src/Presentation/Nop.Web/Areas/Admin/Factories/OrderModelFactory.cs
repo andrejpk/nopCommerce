@@ -862,7 +862,7 @@ namespace Nop.Web.Areas.Admin.Factories
                 .Select(country => new SelectListItem { Text = country.Name, Value = country.Id.ToString() }).ToList();
             searchModel.AvailableCountries.Insert(0, new SelectListItem { Text = _localizationService.GetResource("Admin.Common.All"), Value = "0" });
 
-            searchModel.IgnoreLimitPerStore = _catalogSettings.IgnoreStoreLimitations;
+            searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
             //prepare page parameters
             searchModel.SetGridPageSize();

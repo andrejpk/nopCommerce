@@ -8,6 +8,7 @@ using Nop.Services.Messages;
 using Nop.Services.Stores;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using Nop.Web.Areas.Admin.Models.Messages;
+using Nop.Web.Framework.Extensions;
 
 namespace Nop.Web.Areas.Admin.Factories
 {
@@ -81,7 +82,7 @@ namespace Nop.Web.Areas.Admin.Factories
                 Text = _localizationService.GetResource("Admin.Promotions.NewsLetterSubscriptions.List.SearchActive.NotActiveOnly")
             });
 
-            searchModel.IgnoreLimitPerStore = _catalogSettings.IgnoreStoreLimitations;
+            searchModel.HideStoresList = _catalogSettings.IgnoreStoreLimitations || searchModel.AvailableStores.SelectionIsNotPossible();
 
             //prepare page parameters
             searchModel.SetGridPageSize();
