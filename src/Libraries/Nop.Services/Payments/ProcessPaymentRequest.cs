@@ -103,6 +103,6 @@ namespace Nop.Services.Payments
         /// <summary>
         /// You can store any custom value in this property
         /// </summary>
-        public Dictionary<string, object> CustomValues { get; set; }
+        public Dictionary<string, object> CustomValues { get; set; }        
     }
 }
