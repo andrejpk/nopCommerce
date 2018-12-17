@@ -307,7 +307,16 @@ namespace Nop.Plugin.Payments.Stripe
             _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Payments.Stripe.Fields.AdditionalFeePercentage.Hint", "Determines whether to apply a percentage additional fee to the order total. If not enabled, a fixed value is used.");
             _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Payments.Stripe.Instructions", @"
                 <p>
-                   
+                     For plugin configuration follow these steps:<br />
+                    <br />
+                    1. If you haven't already, create an account on Stripe.com and sign in<br />
+                    2. In the Developers menu (left), choose the API Keys option.
+                    3. You will see two keys listed, a Publishable key and a Secret key. You will need both. (If you'd like, you can create and use a set of restricted keys. That topic isn't covered here.)
+                    <em>Stripe supports test keys and production keys. Use whichever pair is appropraite. There's no switch between test/sandbox and proudction other than using the appropriate keys.</em>
+                    4. Paste these keys into the configuration page of this plug-in. (Both keys are required.) 
+                    <br />
+                    <em>Note: If using production keys, the payment form will only work on sites hosted with HTTPS. (Test keys can be used on http sites.) If using test keys, 
+                    use these <a href='https://stripe.com/docs/testing'>test card numbers from Stripe</a>.</em><br />
                 </p>");
 
             base.Install();

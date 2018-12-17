@@ -57,7 +57,7 @@ namespace Nop.Plugin.Payments.Stripe.Controllers
                 return AccessDeniedView();
 
             //prepare model
-            var model = new ConfigurationModel
+            ConfigurationModel model = new ConfigurationModel
             {
                 SecretKey = _stripePaymentSettings.SecretKey,
                 PublishableKey = _stripePaymentSettings.PublishableKey,

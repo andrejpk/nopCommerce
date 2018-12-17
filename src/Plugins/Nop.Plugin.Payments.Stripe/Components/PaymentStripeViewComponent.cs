@@ -38,7 +38,7 @@ namespace Nop.Plugin.Payments.Stripe.Components
 
         public IViewComponentResult Invoke()
         {
-            var model = new PaymentInfoModel
+            PaymentInfoModel model = new PaymentInfoModel
             {
                 //whether current customer is guest
                 IsGuest = _workContext.CurrentCustomer.IsGuest(),
