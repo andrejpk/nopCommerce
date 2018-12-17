@@ -70,15 +70,16 @@ namespace Nop.Plugin.Payments.Stripe
         {
             return new RequestOptions
             {
-                ApiKey = _stripePaymentSettings.SecretKey
+                ApiKey = _stripePaymentSettings.SecretKey,
+                IdempotencyKey = Guid.NewGuid().ToString()
             };
         }
 
         public bool SupportCapture => true;
 
-        public bool SupportPartiallyRefund => false;
+        public bool SupportPartiallyRefund => true;
 
-        public bool SupportRefund => false;
+        public bool SupportRefund => true;
 
         public bool SupportVoid => false;
 
@@ -219,9 +220,52 @@ namespace Nop.Plugin.Payments.Stripe
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Full or partial refund
+        /// </summary>
+        /// <param name="refundPaymentRequest"></param>
+        /// <returns></returns>
         public RefundPaymentResult Refund(RefundPaymentRequest refundPaymentRequest)
         {
-            throw new NotImplementedException();
+            string chargeID = refundPaymentRequest.Order.AuthorizationTransactionId;
+            var orderAmtRemaining = refundPaymentRequest.Order.OrderTotal - refundPaymentRequest.AmountToRefund;
+            bool isPartialRefund = orderAmtRemaining > 0;
+
+            if (!IsChargeID(chargeID))
+            {
+                throw new NopException($"Refund error: {chargeID} is not a Stripe Charge ID. Refund cancelled");
+            }
+            var service = new RefundService();
+            var refundOptions = new RefundCreateOptions
+            {
+                ChargeId = chargeID,
+                Amount = (long)(refundPaymentRequest.AmountToRefund * 100),
+                Reason = RefundReasons.RequestedByCustomer
+            };
+            var refund = service.Create(refundOptions, GetStripeApiRequestOptions());
+
+            RefundPaymentResult result = new RefundPaymentResult();
+            
+            switch (refund.Status)
+            {
+                case "succeeded":
+                    result.NewPaymentStatus = isPartialRefund ? PaymentStatus.PartiallyRefunded : PaymentStatus.Refunded;
+                    break;
+
+                case "pending":
+                    result.NewPaymentStatus = PaymentStatus.Pending;
+                    result.AddError($"Refund failed with status of ${ refund.Status }" );
+                    break;
+
+                default:
+                    throw new NopException("Refund returned a status of ${refund.Status}");
+            }
+            return result;
+        }
+
+        private bool IsChargeID(string chargeID)
+        {
+            return chargeID.StartsWith("ch_");
         }
 
         public IList<string> ValidatePaymentForm(IFormCollection form)
