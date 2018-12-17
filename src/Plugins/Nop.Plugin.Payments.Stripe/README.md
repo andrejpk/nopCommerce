@@ -14,6 +14,7 @@ This Payment provider supports Stripe's credit card payment gatway.
 Since this is an open source project, anyone is welcome to send pull requests that address these limits, where possible.
 
 - US Dollars is the only supported currency
+- Only credit card payments are supported (e.g. no e-checks)
 - The Payment workflow is the only supported workflow (Capture/Void are not supported)
 - No ability to save cards for a customer
 - Recurring payments are not supported
