@@ -24,8 +24,13 @@ using Stripe;
 
 namespace Nop.Plugin.Payments.Stripe
 {
+    /// <summary>
+    /// Support for the Stripe payment processor.
+    /// </summary>
     public class StripePaymentProcessor : BasePlugin, IPaymentMethod
     {
+        #region Fields
+
         private readonly CurrencySettings _currencySettings;
         private readonly ICurrencyService _currencyService;
         private readonly ICustomerService _customerService;
@@ -38,6 +43,10 @@ namespace Nop.Plugin.Payments.Stripe
         private readonly IScheduleTaskService _scheduleTaskService;
         private readonly IWebHelper _webHelper;
         private readonly StripePaymentSettings _stripePaymentSettings;
+
+        #endregion
+
+        #region Ctor
 
         public StripePaymentProcessor(CurrencySettings currencySettings,
             ICurrencyService currencyService,
@@ -66,6 +75,31 @@ namespace Nop.Plugin.Payments.Stripe
             this._stripePaymentSettings = stripePaymentSettings;
         }
 
+        #endregion
+
+        #region Utilities
+
+        /// <summary>
+        /// Convert a NopCommere address to a Stripe API address
+        /// </summary>
+        /// <param name="nopAddress"></param>
+        /// <returns></returns>
+        private AddressOptions MapNopAddressToStripe(Core.Domain.Common.Address nopAddress)
+        {
+            return new AddressOptions
+            {
+                Line1 = nopAddress.Address1,
+                City = nopAddress.City,
+                State = nopAddress.StateProvince.Abbreviation,
+                PostalCode = nopAddress.ZipPostalCode,
+                Country = nopAddress.Country.ThreeLetterIsoCode
+            };
+        }
+
+        /// <summary>
+        /// Set up for a call to the Stripe API
+        /// </summary>
+        /// <returns></returns>
         private RequestOptions GetStripeApiRequestOptions()
         {
             return new RequestOptions
@@ -75,26 +109,27 @@ namespace Nop.Plugin.Payments.Stripe
             };
         }
 
-        public bool SupportCapture => true;
 
-        public bool SupportPartiallyRefund => true;
-
-        public bool SupportRefund => true;
-
-        public bool SupportVoid => false;
-
-        public override string GetConfigurationPageUrl() => $"{_webHelper.GetStoreLocation()}Admin/PaymentStripe/Configure";       
-
-        public RecurringPaymentType RecurringPaymentType
+        /// <summary>
+        /// Perform a shallow validation of a stripe token
+        /// </summary>
+        /// <param name="stripeTokenObj"></param>
+        /// <returns></returns>
+        private bool IsStripeTokenID(string token)
         {
-            get { return RecurringPaymentType.NotSupported; }
+            return token.StartsWith("tok_");
+        }
+        
+        private bool IsChargeID(string chargeID)
+        {
+            return chargeID.StartsWith("ch_");
         }
 
-        public PaymentMethodType PaymentMethodType => PaymentMethodType.Standard;
+        #endregion
 
-        public bool SkipPaymentInfo => false;
+        #region Methods
 
-        public string PaymentMethodDescription => "Stripe";
+        public override string GetConfigurationPageUrl() => $"{_webHelper.GetStoreLocation()}Admin/PaymentStripe/Configure";
 
         public CancelRecurringPaymentResult CancelRecurringPayment(CancelRecurringPaymentRequest cancelPaymentRequest)
         {
@@ -110,6 +145,7 @@ namespace Nop.Plugin.Payments.Stripe
         {
             throw new NotImplementedException();
         }
+
 
         public decimal GetAdditionalHandlingFee(IList<ShoppingCartItem> cart)
         {
@@ -144,17 +180,6 @@ namespace Nop.Plugin.Payments.Stripe
             throw new NotImplementedException();
         }
 
-        private AddressOptions MapNopAddressToStripe(Core.Domain.Common.Address nopAddress)
-        {
-            return new  AddressOptions
-            {
-                Line1 = nopAddress.Address1,
-                City = nopAddress.City,
-                State = nopAddress.StateProvince.Abbreviation,
-                PostalCode = nopAddress.ZipPostalCode,
-                Country = nopAddress.Country.ThreeLetterIsoCode
-            };
-        }
 
         public ProcessPaymentResult ProcessPayment(ProcessPaymentRequest processPaymentRequest)
         {
@@ -164,7 +189,7 @@ namespace Nop.Plugin.Payments.Stripe
                 throw new NopException("Customer cannot be loaded");
 
             string tokenKey = _localizationService.GetResource("Plugins.Payments.Stripe.Fields.StripeToken.Key");
-            if (!processPaymentRequest.CustomValues.TryGetValue(tokenKey, out object stripeTokenObj) || !(stripeTokenObj is string) || !ValidateStripeToken((string)stripeTokenObj))
+            if (!processPaymentRequest.CustomValues.TryGetValue(tokenKey, out object stripeTokenObj) || !(stripeTokenObj is string) || !IsStripeTokenID((string)stripeTokenObj))
             {
                 throw new NopException("Card token not received");
             }
@@ -176,7 +201,7 @@ namespace Nop.Plugin.Payments.Stripe
                 Currency = "usd",
                 Description = string.Format(StripePaymentDefaults.PaymentNote, processPaymentRequest.OrderGuid),
                 SourceId = stripeToken,
-                
+
             };
 
             if (customer.ShippingAddress != null)
@@ -188,7 +213,7 @@ namespace Nop.Plugin.Payments.Stripe
                     Name = customer.ShippingAddress.FirstName + ' ' + customer.ShippingAddress.LastName
                 };
             }
-                       
+
             var charge = service.Create(chargeOptions, GetStripeApiRequestOptions());
 
             var result = new ProcessPaymentResult();
@@ -205,15 +230,6 @@ namespace Nop.Plugin.Payments.Stripe
             }
         }
 
-        /// <summary>
-        /// Perform a shallow validation of a stripe token
-        /// </summary>
-        /// <param name="stripeTokenObj"></param>
-        /// <returns></returns>
-        private bool ValidateStripeToken(string token)
-        {
-            return token.StartsWith("tok_");
-        }
 
         public ProcessPaymentResult ProcessRecurringPayment(ProcessPaymentRequest processPaymentRequest)
         {
@@ -245,7 +261,7 @@ namespace Nop.Plugin.Payments.Stripe
             var refund = service.Create(refundOptions, GetStripeApiRequestOptions());
 
             RefundPaymentResult result = new RefundPaymentResult();
-            
+
             switch (refund.Status)
             {
                 case "succeeded":
@@ -254,7 +270,7 @@ namespace Nop.Plugin.Payments.Stripe
 
                 case "pending":
                     result.NewPaymentStatus = PaymentStatus.Pending;
-                    result.AddError($"Refund failed with status of ${ refund.Status }" );
+                    result.AddError($"Refund failed with status of ${ refund.Status }");
                     break;
 
                 default:
@@ -263,15 +279,10 @@ namespace Nop.Plugin.Payments.Stripe
             return result;
         }
 
-        private bool IsChargeID(string chargeID)
-        {
-            return chargeID.StartsWith("ch_");
-        }
-
         public IList<string> ValidatePaymentForm(IFormCollection form)
         {
             IList<string> errors = new List<string>();
-            if (!(form.TryGetValue("stripeToken", out StringValues stripeToken) || stripeToken.Count != 1 || !ValidateStripeToken(stripeToken[0])))
+            if (!(form.TryGetValue("stripeToken", out StringValues stripeToken) || stripeToken.Count != 1 || !IsStripeTokenID(stripeToken[0])))
             {
                 errors.Add("Token was not supplied or invalid");
             }
@@ -296,7 +307,7 @@ namespace Nop.Plugin.Payments.Stripe
                 AdditionalFeePercentage = false
             });
 
-           
+
             //locales            
             _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Payments.Stripe.Fields.SecretKey", "Secret key, live or test (starts with sk_)");
             _localizationService.AddOrUpdatePluginLocaleResource("Plugins.Payments.Stripe.Fields.PublishableKey", "Publishable key, live or test (starts with pk_)");
@@ -330,7 +341,7 @@ namespace Nop.Plugin.Payments.Stripe
         {
             //settings
             _settingService.DeleteSetting<StripePaymentSettings>();
-            
+
             //locales
             _localizationService.DeletePluginLocaleResource("Plugins.Payments.Stripe.Fields.SecretKey");
             _localizationService.DeletePluginLocaleResource("Plugins.Payments.Stripe.Fields.PublishableKey");
@@ -343,5 +354,31 @@ namespace Nop.Plugin.Payments.Stripe
 
             base.Uninstall();
         }
+
+        #endregion
+
+        #region Properties
+
+        public bool SupportCapture => false;
+
+        public bool SupportPartiallyRefund => true;
+
+        public bool SupportRefund => true;
+
+        public bool SupportVoid => false;
+
+        
+        public RecurringPaymentType RecurringPaymentType
+        {
+            get { return RecurringPaymentType.NotSupported; }
+        }
+
+        public PaymentMethodType PaymentMethodType => PaymentMethodType.Standard;
+
+        public bool SkipPaymentInfo => false;
+
+        public string PaymentMethodDescription => "Stripe";
+
+        #endregion
     }
 }
